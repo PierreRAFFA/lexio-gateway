@@ -1,0 +1,35 @@
+{
+  "name": "wordz-gateway",
+  "version": "0.0.1",
+  "description": "Wordz Gateway",
+  "main": "app.js",
+  "scripts": {
+    "lint": "eslint .",
+    "start": "if-env NODE_ENV=production && node . || nodemon .",
+    "posttest": "npm run lint && nsp check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PierreRAFFA/wordz-gateway.git"
+  },
+  "author": "Pierre RAFFA",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PierreRAFFA/wordz-gateway/issues"
+  },
+  "homepage": "https://github.com/PierreRAFFA/wordz-gateway#readme",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
+    "jsonwebtoken": "^7.4.2",
+    "lodash": "^4.17.4",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.4.1",
+    "if-env": "^1.0.0",
+    "nodemon": "^1.11.0"
+  }
+}
