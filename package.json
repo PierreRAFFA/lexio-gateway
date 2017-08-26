@@ -1,6 +1,6 @@
 {
   "name": "wordz-gateway",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Wordz Gateway",
   "main": "app.js",
   "scripts": {
