@@ -147,7 +147,11 @@ app.get('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
       if (error) {
         res.status(statusCode).send(error);
       } else {
-        res.status(statusCode).json(JSON.parse(body));
+        try {
+          res.status(statusCode).json(JSON.parse(body));
+        }catch (parsingError) {
+          res.status(500).send(parsingError.message);
+        }
       }
     });
   }else{
@@ -187,7 +191,11 @@ app.post('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
       if (error) {
         res.status(statusCode).send(error);
       } else {
-        res.status(statusCode).json(JSON.parse(body));
+        try {
+          res.status(statusCode).json(JSON.parse(body));
+        }catch (parsingError) {
+          res.status(500).send(parsingError.message);
+        }
       }
     });
   }else{
