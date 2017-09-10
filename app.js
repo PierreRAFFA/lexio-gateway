@@ -14,6 +14,9 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 }));
 
+// use for the ssl
+app.use(express.static('static'));
+
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!')
 });
@@ -35,20 +38,36 @@ const authenticateUser = (req, res, next) => {
   const url = `http://wordz-authentication:3010/api/users/me?access_token=${accessToken}`;
 
   request(url, (error, response, body) => {
-    const json = JSON.parse(body);
     if(error) {
       res.status(500).send(error);
-    }else if (response.statusCode !== 200) {
-      res.status(response.statusCode).send(json);
-    }else{
-      req.user = assign({}, json, {accessToken});
-      next();
+    }else {
+
+      let json;
+      try {
+        json = JSON.parse(body);
+      }catch (parsingError) {
+        res.status(500).send(parsingError.message);
+        return;
+      }
+
+      if (response.statusCode !== 200) {
+        res.status(response.statusCode).send(json);
+      }else{
+        req.user = assign({}, json, {accessToken});
+        next();
+      }
     }
   });
 };
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// CUSTOM ROUTES
 // Returns the app version
+/**
+ * Returns information about the app
+ * Can be used to :
+ *  - specify a new version available
+ *  - put the game in maintenance mode
+ */
 app.get('/api/v:version/app/settings', function(req, res) {
   const major = 0;
   const minor = 0;
@@ -66,27 +85,10 @@ app.get('/api/v:version/app/settings', function(req, res) {
   res.send({version, major, minor, patch, store, maintenance});
 });
 
-// app.get('/api/v:version/authentication/auth/facebook/callback', (req, res) => {
-//
-//   console.log(req);
-//
-//   const search = getUrlSearch(req.originalUrl);
-//   let options = {
-//     url: `http://wordz-authentication:3010/auth/facebook/callback${search}`,
-//   };
-//
-//   return request.get(options, (error, response, body) => {
-//     console.log(error);
-//     console.log(response.statusCode);
-//     console.log(body);
-//     if (error) {
-//       res.send(error);
-//     } else {
-//       res.json(body);
-//     }
-//   });
-// });
-
+/**
+ * Logs in the user
+ * Not used by the app
+ */
 app.post('/api/v:version/authentication/users/login', (req, res) => {
   let options = {
     url: `http://wordz-authentication:3010/api/users/login`,
@@ -103,6 +105,10 @@ app.post('/api/v:version/authentication/users/login', (req, res) => {
   });
 });
 
+/**
+ * Logs in the user via Facebook
+ * This url is called by Facebook server and send a token
+ */
 app.post('/api/v:version/authentication/facebook/token', (req, res) => {
 
   let options = {
@@ -115,7 +121,11 @@ app.post('/api/v:version/authentication/facebook/token', (req, res) => {
     if (error) {
       res.status(statusCode).send(error);
     } else {
-      res.json(JSON.parse(body));
+      try {
+        res.status(statusCode).json(JSON.parse(body));
+      }catch (parsingError) {
+        res.status(500).send(parsingError.message);
+      }
     }
   });
 });
