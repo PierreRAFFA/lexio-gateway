@@ -4,9 +4,15 @@ const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const assign = require('lodash/assign');
 const get = require('lodash/get');
+const https = require('https');
+const fs = require('fs');
+
+
+
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
+
 const app = express();
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -17,9 +23,23 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 // use for the ssl
 app.use(express.static('static'));
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-});
+if (process.env.NODE_ENV === 'production') {
+  const options = {
+    key: fs.readFileSync('./ssl/privkey1.pem'),
+    cert: fs.readFileSync('./ssl/cert1.pem'),
+  };
+
+  const server = https.createServer(options, app).listen(3000, function(){
+    console.log("Express server listening on port " + 3000);
+  });
+
+} else {
+
+  app.listen(3000, function () {
+    console.log('Example app listening on port 3000!')
+  });
+}
+
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// MIDDLEWARES
 
@@ -74,7 +94,7 @@ app.get('/api/v:version/app/settings', function(req, res) {
   const patch = 3;
   const version = major + '.' + minor + '.' + patch;
   const store = {
-    apple: 'itms-apps:itunes.apple.com/app/wordz/id1208567317'
+    apple: 'itms-apps:itunes.apple.com/app/lexio/id1286536739'
   };
 
   const maintenance = {
