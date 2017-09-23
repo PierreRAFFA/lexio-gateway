@@ -1,7 +1,7 @@
 {
-  "name": "wordz-gateway",
+  "name": "LexioGateway",
   "version": "0.0.2",
-  "description": "Wordz Gateway",
+  "description": "Lexio Gateway",
   "main": "app.js",
   "scripts": {
     "lint": "eslint .",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/PierreRAFFA/wordz-gateway.git"
+    "url": "git+https://github.com/PierreRAFFA/lexio-gateway.git"
   },
   "author": "Pierre RAFFA",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/PierreRAFFA/wordz-gateway/issues"
+    "url": "https://github.com/PierreRAFFA/lexio-gateway/issues"
   },
-  "homepage": "https://github.com/PierreRAFFA/wordz-gateway#readme",
+  "homepage": "https://github.com/PierreRAFFA/lexio-gateway#readme",
   "dependencies": {
     "bluebird": "^3.5.0",
     "body-parser": "^1.17.2",

@@ -1,1 +1,1 @@
-# wordz-gateway
+# Lexio Gateway

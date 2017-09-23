@@ -55,7 +55,7 @@ const authenticateUser = (req, res, next) => {
 
   console.log('authenticateUser');
   const accessToken = req.query.access_token;
-  const url = `http://wordz-authentication:3010/api/users/me?access_token=${accessToken}`;
+  const url = `http://lexio-authentication:3010/api/users/me?access_token=${accessToken}`;
 
   request(url, (error, response, body) => {
     if(error) {
@@ -111,7 +111,7 @@ app.get('/api/v:version/app/settings', function(req, res) {
  */
 app.post('/api/v:version/authentication/users/login', (req, res) => {
   let options = {
-    url: `http://wordz-authentication:3010/api/users/login`,
+    url: `http://lexio-authentication:3010/api/users/login`,
     form: req.body
   };
 
@@ -132,7 +132,7 @@ app.post('/api/v:version/authentication/users/login', (req, res) => {
 app.post('/api/v:version/authentication/facebook/token', (req, res) => {
 
   let options = {
-    url: `http://wordz-authentication:3010/facebook/token`,
+    url: `http://lexio-authentication:3010/facebook/token`,
     form: req.body
   };
 
@@ -162,7 +162,7 @@ app.get('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
   }
   /**/
 
-  const host = `wordz-${req.params.service}`;
+  const host = `lexio-${req.params.service}`;
   let options = {
     url: `http://${host}:3010/api/${req.params['0']}${search}`,
     headers: {},
@@ -204,7 +204,7 @@ app.post('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
   }
   /**/
 
-  const host = `wordz-${req.params.service}`;
+  const host = `lexio-${req.params.service}`;
 
   let options = {
     url: `http://${host}:3010/api/${req.params['0']}${search}`,
