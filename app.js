@@ -98,7 +98,7 @@ app.get('/api/v:version/app/settings', function(req, res) {
   };
 
   const maintenance = {
-    enable: false,
+    enable: true,
     message: 'Sorry, WordZ is down for maintenance for several minutes'
   };
 
