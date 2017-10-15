@@ -7,12 +7,8 @@ const get = require('lodash/get');
 const https = require('https');
 const fs = require('fs');
 
-
-
-
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
-
 const app = express();
 
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
@@ -55,6 +51,7 @@ const authenticateUser = (req, res, next) => {
 
   console.log('authenticateUser');
   const accessToken = req.query.access_token;
+
   const url = `http://lexio-authentication:3010/api/users/me?access_token=${accessToken}`;
 
   request(url, (error, response, body) => {
@@ -98,8 +95,8 @@ app.get('/api/v:version/app/settings', function(req, res) {
   };
 
   const maintenance = {
-    enable: true,
-    message: 'Sorry, WordZ is down for maintenance for several minutes'
+    enable: false,
+    message: 'Sorry, Lexio is down for maintenance for several minutes'
   };
 
   res.send({version, major, minor, patch, store, maintenance});
@@ -167,6 +164,8 @@ app.get('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
     url: `http://${host}:3010/api/${req.params['0']}${search}`,
     headers: {},
   };
+
+  console.log(req.user);
 
   if (req.user) {
     options.headers = setAuthorization(req.user);
@@ -238,7 +237,7 @@ app.post('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////  UTILS
 function getUrlSearch(url) {
-  let search = null;
+  let search = '';
   const split = url.split('?');
   if (split.length === 2) {
     search = '?' + split[1];

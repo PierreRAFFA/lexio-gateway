@@ -44,6 +44,7 @@ $ docker logs lexio-authentication -f
 #### Connect to a db
 ```sh
 $ docker run -it --rm --net lexioinfrastructure_default --link lexio-authentication-mongo:mongo mongo mongo -u admin -p password --authenticationDatabase admin lexio-authentication-mongo/authentication
+$ docker run -it --rm --net lexioinfrastructure_default --link lexio-game-mongo:mongo mongo mongo -u admin -p password --authenticationDatabase admin lexio-game-mongo/game
 ```
 
 
