@@ -85,7 +85,7 @@ const authenticateUser = (req, res, next) => {
  *  - specify a new version available
  *  - put the game in maintenance mode
  */
-app.get('/api/v:version/app/settings', function(req, res) {
+app.get('/v:version/app/settings', function(req, res) {
   const major = 0;
   const minor = 0;
   const patch = 3;
@@ -106,7 +106,7 @@ app.get('/api/v:version/app/settings', function(req, res) {
  * Logs in the user
  * Not used by the app
  */
-app.post('/api/v:version/authentication/users/login', (req, res) => {
+app.post('/v:version/authentication/users/login', (req, res) => {
   let options = {
     url: `http://lexio-authentication:3010/api/users/login`,
     form: req.body
@@ -117,7 +117,11 @@ app.post('/api/v:version/authentication/users/login', (req, res) => {
     if (error) {
       res.status(statusCode).send(error);
     } else {
-      res.json(JSON.parse(body));
+      try {
+        res.status(statusCode).json(JSON.parse(body));
+      }catch (parsingError) {
+        res.status(500).send(parsingError.message);
+      }
     }
   });
 });
@@ -126,7 +130,7 @@ app.post('/api/v:version/authentication/users/login', (req, res) => {
  * Logs in the user via Facebook
  * This url is called by Facebook server and send a token
  */
-app.post('/api/v:version/authentication/facebook/token', (req, res) => {
+app.post('/v:version/authentication/facebook/token', (req, res) => {
 
   let options = {
     url: `http://lexio-authentication:3010/facebook/token`,
@@ -149,7 +153,7 @@ app.post('/api/v:version/authentication/facebook/token', (req, res) => {
 
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// CLASSIC ROUTES
-app.get('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
+app.get('/v:version/:service/(*)', authenticateUser, (req, res) => {
   console.log(req.originalUrl);
   const search = getUrlSearch(req.originalUrl);
 
@@ -190,12 +194,8 @@ app.get('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
   }
 });
 
-app.post('/api/v:version/:service/(*)', authenticateUser, (req, res) => {
+app.post('/v:version/:service/(*)', authenticateUser, (req, res) => {
   const search = getUrlSearch(req.originalUrl);
-  console.log(req.body);
-  console.log(req.body.productId);
-  console.log(req.body.receipt);
-  console.log(req.body.sandbox);
 
   /* Todo: Separate the authentication/autorization and the user services */
   if (req.params.service === 'user') {
