@@ -19,10 +19,26 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 // use for the ssl
 app.use(express.static('static'));
 
+// Helmet.js helps secure Express servers through setting HTTP headers.
+// It adds HSTS, removes the X-Powered-By header and sets the X-Frame-Options header
+// to prevent click jacking, among other things. Setting it up is simple.
+app.use(require('helmet')());
+
 if (process.env.NODE_ENV === 'production') {
   const options = {
     key: fs.readFileSync('./ssl/privkey1.pem'),
     cert: fs.readFileSync('./ssl/cert1.pem'),
+    ca: fs.readFileSync('./ssl/chain1.pem')
+
+    // This is where the magic happens in Node.  All previous
+    // steps simply setup SSL (except the CA).  By requesting
+    // the client provide a certificate, we are essentially
+    // authenticating the user.
+    // requestCert: true,
+
+    // If specified as "true", no unauthenticated traffic
+    // will make it to the route specified.
+    // rejectUnauthorized: true
   };
 
   const server = https.createServer(options, app).listen(3000, function(){
@@ -50,11 +66,17 @@ const authenticateUser = (req, res, next) => {
   req.user = null;
 
   console.log('authenticateUser');
-  const accessToken = req.query.access_token;
+  const accessToken = req.headers.authorization;
 
-  const url = `http://lexio-authentication:3010/api/users/me?access_token=${accessToken}`;
+  const options = {
+    url: `http://lexio-authentication:3010/api/users/me`,
+    headers: {
+      "authorization": accessToken
+    }
+  };
 
-  request(url, (error, response, body) => {
+  request(options, (error, response, body) => {
+    console.log(body);
     if(error) {
       res.status(500).send(error);
     }else {
@@ -81,7 +103,7 @@ const authenticateUser = (req, res, next) => {
 // Returns the app version
 /**
  * Returns information about the app
- * Can be used to :
+ * Can be used to:
  *  - specify a new version available
  *  - put the game in maintenance mode
  */
@@ -96,7 +118,7 @@ app.get('/v:version/app/settings', function(req, res) {
 
   const maintenance = {
     enable: false,
-    message: 'Sorry, Lexio is down for maintenance for several minutes'
+    message: 'Sorry, Lexio is down for maintenance'
   };
 
   res.send({version, major, minor, patch, store, maintenance});
@@ -154,26 +176,27 @@ app.post('/v:version/authentication/facebook/token', (req, res) => {
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// CLASSIC ROUTES
 app.get('/v:version/:service/(*)', authenticateUser, (req, res) => {
-  console.log(req.originalUrl);
-  const search = getUrlSearch(req.originalUrl);
-
-  /* Todo: Separate the authentication/autorization and the user services */
-  if (req.params.service === 'user') {
-    req.params.service = 'authentication';
-  }
-  /**/
-
-  const host = `lexio-${req.params.service}`;
-  let options = {
-    url: `http://${host}:3010/api/${req.params['0']}${search}`,
-    headers: {},
-  };
-
-  console.log(req.user);
-
   if (req.user) {
-    options.headers = setAuthorization(req.user);
-    console.log(options.headers);
+    const search = getUrlSearch(req.originalUrl);
+
+    let headers = {};
+
+    /* Todo: Separate the authentication/autorization and the user services */
+    if (req.params.service === 'user') {
+      req.params.service = 'authentication';
+      headers = {
+        "X-Access-Token": req.headers.authorization
+      }
+    }else{
+      headers = setAuthorization(req.user);
+    }
+    /**/
+
+    const host = `lexio-${req.params.service}`;
+    let options = {
+      url: `http://${host}:3010/api/${req.params['0']}${search}`,
+      headers
+    };
 
     return request(options, (error, response, body) => {
       const statusCode = get(response, 'statusCode') || 500;
@@ -251,6 +274,6 @@ function setAuthorization(user) {
       expiresIn: 1440 // expires in 24 hours
     });
 
-  header.Authorization = token;
+  header['authorization'] = token;
   return header;
 }
