@@ -26,9 +26,9 @@ app.use(require('helmet')());
 
 if (process.env.NODE_ENV === 'production') {
   const options = {
-    key: fs.readFileSync('./ssl/privkey1.pem'),
-    cert: fs.readFileSync('./ssl/cert1.pem'),
-    ca: fs.readFileSync('./ssl/chain1.pem')
+    key: fs.readFileSync('./ssl/privkey2.pem'),
+    cert: fs.readFileSync('./ssl/cert2.pem'),
+    ca: fs.readFileSync('./ssl/chain2.pem')
 
     // This is where the magic happens in Node.  All previous
     // steps simply setup SSL (except the CA).  By requesting
@@ -67,6 +67,8 @@ const authenticateUser = (req, res, next) => {
 
   console.log('authenticateUser');
   const accessToken = req.headers.authorization;
+
+  console.log(accessToken);
 
   const options = {
     url: `http://lexio-authentication:3010/api/users/me`,
