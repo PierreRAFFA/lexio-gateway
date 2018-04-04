@@ -112,7 +112,7 @@ const authenticateUser = (req, res, next) => {
 app.get('/v:version/app/settings', function(req, res) {
   const major = 0;
   const minor = 0;
-  const patch = 5;
+  const patch = 6;
   const version = major + '.' + minor + '.' + patch;
   const store = {
     apple: 'itms-apps:itunes.apple.com/app/lexio/id1286536739'
