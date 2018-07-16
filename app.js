@@ -112,7 +112,7 @@ const authenticateUser = (req, res, next) => {
  */
 app.get('/v:version/app/settings', function(req, res) {
   const major = 0;
-  const minor = 4;
+  const minor = 5;
   const patch = 0;
   const version = major + '.' + minor + '.' + patch;
   const store = {
