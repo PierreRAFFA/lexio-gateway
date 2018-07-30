@@ -1,0 +1,36 @@
+FROM node:8-alpine as builder
+
+# Create app directory
+WORKDIR /var/app
+
+# Install app dependencies
+COPY . /var/app
+RUN npm install --quiet && \
+    npm run build
+
+##############################
+##############################
+FROM node:8-alpine as prodDependencies
+
+# Create app directory
+WORKDIR /var/app
+
+# Install app dependencies
+COPY package*.json /var/app/
+RUN npm install --production --quiet
+
+
+##############################
+##############################
+FROM node:8-alpine
+
+# Create app directory
+WORKDIR /var/app
+
+COPY --from=builder /var/app/build /var/app/build
+COPY --from=prodDependencies /var/app/package.json /var/app/package.json
+COPY --from=prodDependencies /var/app/node_modules /var/app/node_modules
+
+EXPOSE 3000
+
+CMD [ "npm", "run", "start" ]
