@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response, Router } from "express";
 
 import * as settingsController from './controllers/settingsController';
-import * as loginController from './controllers/loginController';
-import * as exampleController from './controllers/example';
+import * as authenticateController from './controllers/authenticateController';
+import * as serviceController from './controllers/serviceController';
+import { authenticate } from "./middlewares/authenticate";
 
 const routes: Router = require('express').Router();
 
@@ -20,23 +21,32 @@ routes.get('/healthcheck', (req: Request, res: Response) => {
 /**
  * Get Settings
  */
-routes.get('/v:apiVersion/app/settings', settingsController.get);
+routes.get('/v:apiVersion/app/settings', settingsController.read);
+routes.get('/app/settings', settingsController.read);
 
 /**
  * Logs in the user
  * Not used by the app
  */
-routes.post('/v:apiVersion/authentication/users/login', loginController.loginWithUsername);
+routes.post('/v:apiVersion/authentication/users/login', authenticateController.authenticate);
+routes.post('/authentication/users/login', authenticateController.authenticate);
 
 /**
  * Login via Facebook
  */
-routes.post('/v:apiVersion/authentication/facebook/token', loginController.loginViaFacebook);
+routes.post('/v:apiVersion/authentication/facebook/token', authenticateController.authenticateViaFacebook);
+routes.post('/authentication/facebook/token', authenticateController.authenticateViaFacebook);
 
-routes.get("/examples/:id", exampleController.get);
-routes.post("/example", exampleController.post);
-routes.put("/examples/:id", exampleController.put);
-routes.delete("/examples/:id", exampleController.del);
-routes.patch("/examples/:id", exampleController.patch);
+routes.get("/v:apiVersion/user/users/me", serviceController.me);
+routes.get("/user/users/me", serviceController.me);
+
+/**
+ * Classic routes
+ */
+routes.get("/v:apiVersion/:service/(*)", authenticate, serviceController.read);
+routes.get("/:service/(*)", authenticate, serviceController.read);
+
+routes.post("/v:apiVersion/:service/(*)", authenticate, serviceController.create);
+routes.post("/:service/(*)", authenticate, serviceController.create);
 
 export default routes;

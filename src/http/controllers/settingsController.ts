@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-export let get = (req: Request, res: Response) => {
+export const read = (req: Request, res: Response) => {
   const major = 0;
   const minor = 5;
   const patch = 0;
@@ -15,4 +15,4 @@ export let get = (req: Request, res: Response) => {
   };
 
   res.send({version, major, minor, patch, store, maintenance});
-}
+};

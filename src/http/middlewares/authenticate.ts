@@ -1,7 +1,5 @@
 import { NextFunction, Response } from "express";
-import { LexioRequest } from "../../interfaces";
-import * as request from 'request';
-import { Response as RequestResponse } from "request";
+import { lexio, LexioRequest, IFullUser } from "lexio";
 import { assign } from 'lodash';
 
 /**
@@ -9,43 +7,63 @@ import { assign } from 'lodash';
  * This user can be retrieved from the next middlewares or the remote methods
  *
  */
-export function authenticate(req: LexioRequest, res: Response, next: NextFunction) {
+export async function authenticate(req: LexioRequest, res: Response, next: NextFunction) {
   console.log('authenticate');
 
   req.user = undefined;
 
   console.log('authenticateUser');
-  const accessToken = req.headers.authorization;
 
+  // access_token sent by the client in Authorization
+  // Authorization will become the JWT afterwards
+  const accessToken: string = req.headers.authorization;
   console.log(accessToken);
 
-  const options = {
-    url: `http://lexio-authentication:3010/api/users/me`,
-    headers: {
-      "authorization": accessToken
-    }
-  };
+  try {
+    const user: IFullUser = await lexio.fromReq(req).me();
 
-  request(options, (error: any, response: RequestResponse, body: any) => {
-    console.log(body);
-    if (error) {
-      res.status(500).send(error);
-    } else {
+    console.log('USER IS');
+    console.log(user);
+    req.user = assign({}, user, {accessToken});
+    next();
 
-      let json;
-      try {
-        json = JSON.parse(body);
-      } catch (parsingError) {
-        res.status(500).send(parsingError.message);
-        return;
-      }
+  }catch (e) {
+    console.log('OOOOOOOOO');
+    console.log(e);
+    next(e);
+    // res.status(500).send(e.message);
+  }
 
-      if (response.statusCode !== 200) {
-        res.status(response.statusCode).send(json);
-      } else {
-        req.user = assign({}, json, {accessToken});
-        next();
-      }
-    }
-  });
+  //
+  //
+  // const host: string = getServiceHost(apiVersion, `lexio-authentication`);
+  // const options = {
+  //   url: `${host}/api/users/me`,
+  //   headers: {
+  //     "authorization": accessToken
+  //   }
+  // };
+  //
+  // request(options, (error: any, response: RequestResponse, body: any) => {
+  //   console.log(body);
+  //   if (error) {
+  //     res.status(500).send(error);
+  //   } else {
+  //
+  //     let json;
+  //     try {
+  //       json = JSON.parse(body);
+  //     } catch (parsingError) {
+  //       res.status(500).send(parsingError.message);
+  //       return;
+  //     }
+  //
+  //     if (response.statusCode !== 200) {
+  //       res.status(response.statusCode).send(json);
+  //     } else {
+  //       req.user = assign({}, json, {accessToken});
+  //       next();
+  //     }
+  //   }
+  // });
 }
