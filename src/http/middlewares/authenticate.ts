@@ -1,5 +1,5 @@
 import { NextFunction, Response } from "express";
-import { lexio, LexioRequest, IFullUser } from "lexio";
+import { lexio, LexioRequest, IFullUser } from 'lexio';
 import { assign } from 'lodash';
 
 /**
@@ -12,11 +12,9 @@ export async function authenticate(req: LexioRequest, res: Response, next: NextF
 
   req.user = undefined;
 
-  console.log('authenticateUser');
-
   // access_token sent by the client in Authorization
   // Authorization will become the JWT afterwards
-  const accessToken: string = req.headers.authorization;
+  const accessToken: string = req.headers.authorization as string;
   console.log(accessToken);
 
   try {
@@ -28,42 +26,8 @@ export async function authenticate(req: LexioRequest, res: Response, next: NextF
     next();
 
   }catch (e) {
-    console.log('OOOOOOOOO');
-    console.log(e);
-    next(e);
-    // res.status(500).send(e.message);
+    // console.log(e);
+    // next(e);
+    res.status(e.statusCode || 500).json(e);
   }
-
-  //
-  //
-  // const host: string = getServiceHost(apiVersion, `lexio-authentication`);
-  // const options = {
-  //   url: `${host}/api/users/me`,
-  //   headers: {
-  //     "authorization": accessToken
-  //   }
-  // };
-  //
-  // request(options, (error: any, response: RequestResponse, body: any) => {
-  //   console.log(body);
-  //   if (error) {
-  //     res.status(500).send(error);
-  //   } else {
-  //
-  //     let json;
-  //     try {
-  //       json = JSON.parse(body);
-  //     } catch (parsingError) {
-  //       res.status(500).send(parsingError.message);
-  //       return;
-  //     }
-  //
-  //     if (response.statusCode !== 200) {
-  //       res.status(response.statusCode).send(json);
-  //     } else {
-  //       req.user = assign({}, json, {accessToken});
-  //       next();
-  //     }
-  //   }
-  // });
 }

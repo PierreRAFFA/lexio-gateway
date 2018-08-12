@@ -1,10 +1,10 @@
-import { Response } from "express";
-import { lexio, getServiceHost, LexioError, LexioRequest, IFullUser } from "lexio";
+import { Response } from 'express';
+import { lexio, getServiceHost, LexioRequest, IFullUser } from 'lexio';
 import * as jwt from 'jsonwebtoken';
 import * as request from 'request';
 import { Response as ResponseRequest } from 'request';
-import { get, assign } from 'lodash';
-import { getApiVersion } from "../../utils/utils";
+import { get, set, assign } from 'lodash';
+import { getApiVersion } from '../../utils/utils';
 
 /**
  *
@@ -46,7 +46,8 @@ export const read = (req: LexioRequest, res: Response) => {
     const host = getServiceHost(apiVersion, `lexio-${service}`);
     const options: any = {
       url: `${host}/api/${req.params['0']}${search}`,
-      headers
+      headers,
+      json: true,
     };
 
     console.log(options.url);
@@ -56,19 +57,20 @@ export const read = (req: LexioRequest, res: Response) => {
       const statusCode = get(response, 'statusCode') || 500;
       console.log('here');
       console.log(statusCode);
+      console.log(body);
       if (error || response.statusCode >= 400) {
-        res.status(statusCode).send(error || body);
+        res.status(statusCode).json(error || body);
       } else {
         try {
-          res.status(statusCode).json(JSON.parse(body));
+          res.status(statusCode).json(body);
         } catch (parsingError) {
           res.status(500).send(parsingError.message);
         }
       }
     });
   } else {
-    const error: LexioError = new Error('Authorization Required') as LexioError;
-    error.statusCode = 401;
+    const error: Error = new Error('Authorization Required');
+    set(error, 'statusCode', 401);
     res.send(error);
   }
 };
@@ -90,12 +92,11 @@ export const create = (req: LexioRequest, res: Response) => {
     const options: any = {
       url: `${host}/api/${req.params['0']}${search}`,
       headers,
-      form: req.body
+      form: req.body,
+      json: true,
     };
 
-    console.log(options.url);
-
-    console.log(req);
+    console.log('Calling', options.url);
 
     //call microservice
     return request.post(options, (error: any, response: ResponseRequest, body: any) => {
@@ -104,15 +105,15 @@ export const create = (req: LexioRequest, res: Response) => {
         res.status(statusCode).send(error || body);
       } else {
         try {
-          res.status(statusCode).json(JSON.parse(body));
+          res.status(statusCode).json(body);
         } catch (parsingError) {
           res.status(500).send(parsingError.message);
         }
       }
     });
   } else {
-    const error: LexioError = new Error('Authorization Required') as LexioError;
-    error.statusCode = 401;
+    const error: Error = new Error('Authorization Required');
+    set(error, 'statusCode', 401);
     res.send(error);
   }
 };
