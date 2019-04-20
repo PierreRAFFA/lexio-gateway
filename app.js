@@ -27,9 +27,9 @@ app.use(require('helmet')());
 
 if (process.env.NODE_ENV === 'production') {
   const options = {
-    key: fs.readFileSync('./ssl/privkey.pem'),
-    cert: fs.readFileSync('./ssl/cert.pem'),
-    ca: fs.readFileSync('./ssl/chain.pem')
+    key: fs.readFileSync('./ssl/_privkey.pem'),
+    cert: fs.readFileSync('./ssl/_cert.pem'),
+    ca: fs.readFileSync('./ssl/_chain.pem')
 
     // This is where the magic happens in Node.  All previous
     // steps simply setup SSL (except the CA).  By requesting
