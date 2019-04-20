@@ -1,6 +1,6 @@
 {
   "name": "LexioGateway",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Lexio Gateway",
   "main": "app.js",
   "scripts": {
