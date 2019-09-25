@@ -7,6 +7,7 @@ const get = require('lodash/get');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const { authenticateUser } = require('./middlewares/authenticateUser');
 
 //////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
@@ -56,61 +57,42 @@ if (process.env.NODE_ENV === 'production') {
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// MIDDLEWARES
 
-/**
- * Authenticates the user before calling any microservices.
- * Authentication is done by calling the Authentication service
- * @param req
- * @param res
- * @param next
- */
-const authenticateUser = (req, res, next) => {
-  req.user = null;
 
-  console.log('authenticateUser');
-  const accessToken = req.headers.authorization;
-
-  console.log(accessToken);
-
-  const options = {
-    url: `http://lexio-authentication:3010/api/users/me`,
-    headers: {
-      "authorization": accessToken
-    }
-  };
-
-  request(options, (error, response, body) => {
-    console.log(body);
-    if(error) {
-      res.status(500).send(error);
-    }else {
-
-      let json;
-      try {
-        json = JSON.parse(body);
-      }catch (parsingError) {
-        res.status(500).send(parsingError.message);
-        return;
-      }
-
-      if (response.statusCode !== 200) {
-        res.status(response.statusCode).send(json);
-      }else{
-        req.user = assign({}, json, {accessToken});
-        next();
-      }
-    }
-  });
-};
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// CUSTOM ROUTES
 // Returns the app version
+/**
+ * @deprecated
+ * Returns information about the app
+ * Can be used to:
+ *  - specify a new version available
+ *  - put the game in maintenance mode
+ */
+app.get('/v0.1/app/settings', function(req, res) {
+  const major = 0;
+  const minor = 5;
+  const patch = 0;
+  const version = major + '.' + minor + '.' + patch;
+  const store = {
+    apple: 'itms-apps:itunes.apple.com/app/lexio/id1286536739'
+  };
+
+  const maintenance = {
+    enable: true,
+    // @deprecated
+    message: 'Sorry, Lexio is currently down for maintenance',
+  };
+
+  res.send({version, major, minor, patch, store, maintenance});
+});
+
 /**
  * Returns information about the app
  * Can be used to:
  *  - specify a new version available
  *  - put the game in maintenance mode
  */
-app.get('/v:version/app/settings', function(req, res) {
+app.get('/app/settings', function(req, res) {
   const major = 0;
   const minor = 5;
   const patch = 0;
@@ -121,7 +103,10 @@ app.get('/v:version/app/settings', function(req, res) {
 
   const maintenance = {
     enable: false,
-    message: 'Sorry, Lexio is down for maintenance'
+    localisedMessage: {
+      en: 'Sorry, Lexio is currently down for maintenance',
+      fr: 'Désolé, Lexio est actuellement en maintenance',
+    }
   };
 
   res.send({version, major, minor, patch, store, maintenance});
@@ -133,7 +118,33 @@ app.get('/v:version/app/settings', function(req, res) {
  */
 app.post('/v:version/authentication/users/login', (req, res) => {
   let options = {
-    url: `http://lexio-authentication:3010/api/users/login`,
+    url: `http://lexio-authentication1:3010/api/users/login`,
+    form: req.body
+  };
+
+  return request.post(options, (error, response, body) => {
+    const statusCode = get(response, 'statusCode') || 500;
+    if (error) {
+      res.status(statusCode).send(error);
+    } else {
+      try {
+        res.status(statusCode).json(JSON.parse(body));
+      }catch (parsingError) {
+        res.status(500).send(parsingError.message);
+      }
+    }
+  });
+});
+
+/**
+ * @deprecated
+ * Logs in the user via Facebook
+ * This url is called by Facebook server and send a token
+ */
+app.post('/v0.1/authentication/facebook/token', (req, res) => {
+
+  let options = {
+    url: `http://lexio-authentication1:3010/facebook/token`,
     form: req.body
   };
 
@@ -155,10 +166,10 @@ app.post('/v:version/authentication/users/login', (req, res) => {
  * Logs in the user via Facebook
  * This url is called by Facebook server and send a token
  */
-app.post('/v:version/authentication/facebook/token', (req, res) => {
+app.post('/authentication/facebook/token', (req, res) => {
 
   let options = {
-    url: `http://lexio-authentication:3010/facebook/token`,
+    url: `http://lexio-authentication1:3010/facebook/token`,
     form: req.body
   };
 
@@ -176,9 +187,13 @@ app.post('/v:version/authentication/facebook/token', (req, res) => {
   });
 });
 
+
 //////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// CLASSIC ROUTES
-app.get('/v:version/:service/(*)', authenticateUser, (req, res) => {
+/**
+ * @deprecated
+ */
+app.get('/v0.1/:service/(*)', authenticateUser, (req, res) => {
   if (req.user) {
     const search = getUrlSearch(req.originalUrl);
 
@@ -220,7 +235,10 @@ app.get('/v:version/:service/(*)', authenticateUser, (req, res) => {
   }
 });
 
-app.post('/v:version/:service/(*)', authenticateUser, (req, res) => {
+/**
+ * @deprecated
+ */
+app.post('/v0.1/:service/(*)', authenticateUser, (req, res) => {
   const search = getUrlSearch(req.originalUrl);
 
   /* Todo: Separate the authentication/autorization and the user services */
@@ -230,6 +248,93 @@ app.post('/v:version/:service/(*)', authenticateUser, (req, res) => {
   /**/
 
   const host = `lexio-${req.params.service}`;
+
+  let options = {
+    url: `http://${host}:3010/api/${req.params['0']}${search}`,
+    headers: {},
+    form: req.body
+  };
+
+  if (req.user) {
+    options.headers = setAuthorization(req.user);
+    console.log(options.headers);
+
+    return request.post(options, (error, response, body) => {
+      const statusCode = get(response, 'statusCode') || 500;
+      if (error) {
+        res.status(statusCode).send(error);
+      } else {
+        try {
+          res.status(statusCode).json(JSON.parse(body));
+        }catch (parsingError) {
+          res.status(500).send(parsingError.message);
+        }
+      }
+    });
+  }else{
+    let error = new Error('Authorization Required');
+    error.statusCode = 401;
+    res.send(error);
+  }
+});
+//////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////// NEW ROUTES
+app.get('/:service/(*)', authenticateUser, (req, res) => {
+  console.log('NEW GET');
+  if (req.user) {
+    const search = getUrlSearch(req.originalUrl);
+
+    let headers = {};
+
+    /* Todo: Separate the authentication/autorization and the user services */
+    if (req.params.service === 'user') {
+      req.params.service = 'authentication';
+      headers = {
+        "X-Access-Token": req.headers.authorization
+      }
+    }else{
+      headers = setAuthorization(req.user);
+    }
+    /**/
+
+    const version =  req.headers.apiversion;
+    const host = `lexio-${req.params.service}${version}`;
+    console.log('host', host);
+    let options = {
+      url: `http://${host}:3010/api/${req.params['0']}${search}`,
+      headers
+    };
+
+    return request(options, (error, response, body) => {
+      const statusCode = get(response, 'statusCode') || 500;
+      if (error) {
+        res.status(statusCode).send(error);
+      } else {
+        try {
+          res.status(statusCode).json(JSON.parse(body));
+        }catch (parsingError) {
+          res.status(500).send(parsingError.message);
+        }
+      }
+    });
+  }else{
+    let error = new Error('Authorization Required');
+    error.statusCode = 401;
+    res.send(error);
+  }
+});
+
+app.post('/:service/(*)', authenticateUser, (req, res) => {
+  const search = getUrlSearch(req.originalUrl);
+
+  /* Todo: Separate the authentication/autorization and the user services */
+  if (req.params.service === 'user') {
+    req.params.service = 'authentication';
+  }
+  /**/
+
+  const version =  req.headers.apiversion;
+  const host = `lexio-${req.params.service}${version}`;
 
   let options = {
     url: `http://${host}:3010/api/${req.params['0']}${search}`,

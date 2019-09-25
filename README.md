@@ -9,6 +9,10 @@
 ## Server Architecture
 ![Architecture](https://github.com/PierreRAFFA/lexio-gateway/raw/master/assets/architecture.jpg)
 
+## Gqteway Rule
+ /{version}/{service}/{endpoint}?{params}  
+ will redirect to  
+ http://lexio-{service}{version}/api/{endpoint}?{params}  
 
 ## Docker commands
 
