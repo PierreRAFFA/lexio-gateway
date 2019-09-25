@@ -1,0 +1,38 @@
+{
+  "name": "lexio-gateway",
+  "version": "2.0.1",
+  "description": "TODO",
+  "author": "Pierre RAFFA",
+  "scripts": {
+    "start": "if-env NODE_ENV=production && npm run serve || npm run watch",
+    "test": "jest --coverage --forceExit",
+    "test-watch": "jest --watch --coverage --verbose",
+    "pm2": "pm2 start dist/server.js -i 1 --name",
+    "debug": "npm run build && npm run watch-debug",
+    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold\" \"npm run watch-ts\" \"npm run watch-node\"",
+    "build": "npm run build-ts && cp package.json dist/package.json && npm run tslint",
+    "build-core": "cd core && npm run build-ts && npm run tslint",
+    "serve": "node dist/server.js",
+    "watch-node": "nodemon dist/server.js",
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
+    "tslint": "tslint -c tslint.json -p tsconfig.json",
+    "serve-debug": "nodsemon --inspect dist/server.js",
+    "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
+  },
+  "dependencies": {
+    "service-foundation": "github:pierreraffa/service-foundation#v1.0.0",
+    "dotenv": "^6.1.0",
+    "if-env": "^1.0.4",
+    "lodash": "^4.17.11",
+    "mongodb": "^3.1.13"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.0",
+    "@types/lodash": "^4.14.120",
+    "jest": "^24.0.0",
+    "ts-jest": "^23.10.5",
+    "tslint": "^5.10.0",
+    "typescript": "^3.2.1"
+  }
+}
